@@ -9,8 +9,8 @@
 Adafruit_TCS34725 tcs;
 Adafruit_NeoPixel pixels;
 
-#define PIN            6	// Pin the NeoPixels are connected to
-#define NUMPIXELS      71	// Number of LEDs on NeoPixel strip
+#define PIN            D5	// Pin the NeoPixels are connected to
+#define NUMPIXELS      41	// Number of LEDs on NeoPixel strip
 
 #define DEBUG          0	// Debug mode
 #define WHITE_LED      1  // Neopixel with white LED? RGBW
@@ -202,7 +202,7 @@ void setup(void)
 {
   Serial.begin(9600);
 
-  tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
+  tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_4X);
   if(WHITE_LED) pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRBW + NEO_KHZ800);
   else pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -230,6 +230,7 @@ void loop(void)
 {
   measureColor();
   colorTransition();
+  //delay(1000);
 
   // Store current color for next transition
   oldColor = resultColor;
