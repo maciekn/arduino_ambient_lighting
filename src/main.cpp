@@ -12,8 +12,8 @@ Adafruit_NeoPixel pixels;
 #define PIN            D5	// Pin the NeoPixels are connected to
 #define NUMPIXELS      41	// Number of LEDs on NeoPixel strip
 
-#define DEBUG          0	// Debug mode
-#define WHITE_LED      1  // Neopixel with white LED? RGBW
+#define DEBUG          1	// Debug mode
+#define WHITE_LED      0  // Neopixel with white LED? RGBW
 #define LED            13	// Arduino internal LED
 #define NUMAVG         3	// Number of RGB measures to calculate average color
 #define DELAYMEASURE   10	// Delay between average measurements
