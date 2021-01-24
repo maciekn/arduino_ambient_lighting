@@ -1,15 +1,14 @@
 #include <Arduino.h>
 #include <Adafruit_TCS34725.h>
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 
 
 Adafruit_TCS34725 tcs;
-Adafruit_NeoPixel pixels;
 
 #define PIN            D5	// Pin the NeoPixels are connected to
 #define NUMPIXELS      41	// Number of LEDs on NeoPixel strip
 
-#define DEBUG          1	// Debug mode
+#define DEBUG          0	// Debug mode
 #define WHITE_LED      0  // Neopixel with white LED? RGBW
 #define LED            13	// Arduino internal LED
 #define NUMAVG         3	// Number of RGB measures to calculate average color
@@ -20,6 +19,11 @@ Adafruit_NeoPixel pixels;
 #define G_FACTOR       1	// Factors for reducing colors,
 #define B_FACTOR       0.7	// I prefer a little less bluish colors
 
+#if WHITE_LED
+NeoPixelBus<NeoGrbwFeature, NeoEsp8266Uart1800KbpsMethod> pixels(NUMPIXELS, PIN);
+#else
+NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart1800KbpsMethod> pixels(NUMPIXELS, PIN);
+#endif
 
 typedef struct {
   byte r;
@@ -37,34 +41,10 @@ typedef struct {
   RGBW oldColor = {0, 0, 0, 0};
 
 
-
-/*
-  Set full LED strip to one particular color or white
-*/
-void setStripColorWithWhite(byte r, byte g, byte b, byte w)
-{
-  if (DEBUG)
-  {
-    Serial.println("Now setting color:");
-    Serial.print("R: "); Serial.print(r); Serial.print(", ");
-    Serial.print("G: "); Serial.print(g); Serial.print(", ");
-    Serial.print("B: "); Serial.print(b); Serial.print(", ");
-    Serial.print("W: "); Serial.print(w); Serial.println("");
-  }
-
-  for (int i = 0; i < NUMPIXELS; i++)
-  {
-    pixels.setPixelColor(i, pixels.Color(r, g, b, w));
-  }
-
-  pixels.show();
-}
-
-
 /*
   Set full LED strip to one particular color
 */
-void setStripColor(byte r, byte g, byte b)
+void setStripColor(byte r, byte g, byte b, byte w)
 {
   if (DEBUG)
   {
@@ -72,14 +52,24 @@ void setStripColor(byte r, byte g, byte b)
     Serial.print("R: "); Serial.print(r); Serial.print(", ");
     Serial.print("G: "); Serial.print(g); Serial.print(", ");
     Serial.print("B: "); Serial.print(b); Serial.println("");
+    Serial.print("W: "); Serial.print(w); Serial.println("");
   }
 
+#if WHITE_LED
+  RgbwColor colorToBe(r, g, b, w);
   for (int i = 0; i < NUMPIXELS; i++)
   {
-    pixels.setPixelColor(i, pixels.Color(r, g, b));
+    pixels.SetPixelColor(i, colorToBe);
   }
+#else
+  RgbColor colorToBe(r, g, b);
+  for (int i = 0; i < NUMPIXELS; i++)
+  {
+    pixels.SetPixelColor(i, colorToBe);
+  }
+#endif
 
-  pixels.show();
+  pixels.Show();
 }
 
 
@@ -141,13 +131,13 @@ void measureColor()
    * detect difference between lowest and highest
    * if the difference is small only the white led will light
    */
-  if(highest-lowest<10 && WHITE_LED) {
+    if(highest-lowest<10 && WHITE_LED) {
     resultColor.w = highest;
     resultColor.r = 0;
     resultColor.g = 0;
     resultColor.b = 0;
   }else{
-    
+
     resultColor.r -= lowest;
     resultColor.g -= lowest;
     resultColor.b -= lowest;
@@ -185,8 +175,7 @@ void colorTransition()
     tmp.b = (oldColor.b + ((resultColor.b - oldColor.b) / SMOOTH * i)) * B_FACTOR;
     tmp.w = (oldColor.w + ((resultColor.w - oldColor.w) / SMOOTH * i));
 
-    if(WHITE_LED) setStripColorWithWhite(tmp.r, tmp.g, tmp.b, tmp.w);
-    else setStripColor(tmp.r, tmp.g, tmp.b);
+    setStripColor(tmp.r, tmp.g, tmp.b, tmp.w);
     delay(wait);
   }
 }
@@ -200,13 +189,11 @@ void setup(void)
   Serial.begin(9600);
 
   tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_4X);
-  if(WHITE_LED) pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRBW + NEO_KHZ800);
-  else pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
   if (tcs.begin())
   {
     Serial.println("Found TCS34725 sensor.");
-    pixels.begin();
+    pixels.Begin();
     pinMode(LED, OUTPUT);
   }
   else
