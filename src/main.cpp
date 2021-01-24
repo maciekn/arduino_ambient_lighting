@@ -1,10 +1,7 @@
-#include <Wire.h>
-#include "Adafruit_TCS34725.h"
-
+#include <Arduino.h>
+#include <Adafruit_TCS34725.h>
 #include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+
 
 Adafruit_TCS34725 tcs;
 Adafruit_NeoPixel pixels;
