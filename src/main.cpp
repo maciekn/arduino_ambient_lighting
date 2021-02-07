@@ -1,11 +1,24 @@
 #include <Arduino.h>
+
+#include <ESP8266HTTPUpdateServer.h>
+
 #include <Adafruit_TCS34725.h>
 #include <NeoPixelBus.h>
 
 
+const char *ssid = "AmbientLighting";
+const char *wifipass = "AmbLight";
+
+
+IPAddress ip(192, 168, 43, 1);
+IPAddress gateway(192, 168, 43, 1);
+IPAddress subnet(255, 255, 255, 0);
+ESP8266WebServer server(80);
+ESP8266HTTPUpdateServer httpUpdater;
+
 Adafruit_TCS34725 tcs;
 
-#define PIN            D5	// Pin the NeoPixels are connected to
+#define PIN            D4	// Pin the NeoPixels are connected to (TXD1)
 #define NUMPIXELS      41	// Number of LEDs on NeoPixel strip
 
 #define DEBUG          0	// Debug mode
@@ -187,6 +200,10 @@ void colorTransition()
 void setup(void)
 {
   Serial.begin(9600);
+  delay(500);
+  Serial.print("Configuring access point...");
+	WiFi.softAPConfig(ip, gateway, subnet);
+	WiFi.softAP(ssid, wifipass);
 
   tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_4X);
 
@@ -204,6 +221,9 @@ void setup(void)
     digitalWrite(LED, LOW);
     while (1);
   }
+
+  httpUpdater.setup(&server);
+	server.begin();
 }
 
 
@@ -218,4 +238,6 @@ void loop(void)
 
   // Store current color for next transition
   oldColor = resultColor;
+
+  server.handleClient();
 }
